@@ -4,7 +4,7 @@ import numpy as np
 import argparse as ap
 import math
 
-prob_tolerance = 0.001
+prob_tolerance = 0.1
 dec_cases = int(math.log10(prob_tolerance**-1))
 
 
