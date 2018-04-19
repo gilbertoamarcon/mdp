@@ -18,8 +18,25 @@ class Mdp:
 		exit(0)
 
 	@staticmethod
+	def max_norm(arr):
+		return max([abs(i) for i in arr])
+
+	@staticmethod
+	def max_norm_dist(arr_a,arr_b):
+		return Mdp.max_norm([a-b for a,b in zip(arr_a,arr_b)])
+
+	@staticmethod
 	def print_array(arr):
 		return ' '.join(['%*.*f'%(dec_cases+2,dec_cases,i) for i in arr])
+
+	@staticmethod
+	def print_infinite_horizon_pol(pol):
+		print 'Solution:'
+		dec_idx = 1+int(math.log10(len(pol)-1))
+		dec_val = 1+int(math.log10(max(pol)))
+		for k,s in enumerate(pol):
+			print 'S%0*d: %*d' % (dec_idx,k,dec_val,s)
+
 
 	def __init__(self, filename):
 		self.T = []
@@ -109,18 +126,31 @@ class Mdp:
 			return None
 		return self.R[s][a]
 
-	def solve(self, horizon):
+	def finite_horizon_value_iteration(self, horizon):
 		print 'Non-Stationary Value Function:'
 		self.V = self.n*[0.0]
 		self.pol = []
 		for k in range(horizon):
 			aux = [[self.getR(s=s,a=a)+sum([self.getT(s=s,a=a,sn=sn)*self.V[sn] for sn in range(self.n)]) for a in range(self.m)] for s in range(self.n)]
-			self.V = [max(a) for a in aux]
-			
+			self.V = [max(s) for s in aux]
 			print '%2d:'%k,Mdp.print_array(self.V)
-			self.pol.append([np.argmax(a) for a in aux])
+			self.pol.append([np.argmax(s) for s in aux])
 		print ''
 		return  self.pol
+
+	def infinite_horizon_value_iteration(self, discount, bound):
+		stopping_threshold = bound*(1-discount)/discount
+		self.V = self.n*[0.0]
+		while True:
+			oldV = self.V
+			aux = [[self.getR(s=s,a=a)+discount*sum([self.getT(s=s,a=a,sn=sn)*self.V[sn] for sn in range(self.n)]) for a in range(self.m)] for s in range(self.n)]
+			self.V = [max(s) for s in aux]
+			print Mdp.print_array(self.V)
+			self.pol = [np.argmax(s) for s in aux]
+			if Mdp.max_norm_dist(self.V,oldV) < stopping_threshold:
+				break
+		print ''
+		return self.pol
 
 
 
@@ -142,8 +172,22 @@ def main():
 			'-t','--horizon',
 			nargs='?',
 			type=int,
-			required=True,
+			default=None,
 			help='Time horizon.'
+		)
+	parser.add_argument(
+			'-d','--discount',
+			nargs='?',
+			type=float,
+			default=None,
+			help='The discount value.'
+		)
+	parser.add_argument(
+			'-b','--bound',
+			nargs='?',
+			type=float,
+			default=None,
+			help='The bound from the optimal.'
 		)
 
 	args = parser.parse_args()
@@ -156,11 +200,16 @@ def main():
 
 	print mdp
 
-	sol = mdp.solve(horizon=args.horizon)
+	pol = {}
+	if args.horizon is not None:
+		pol = mdp.finite_horizon_value_iteration(horizon=args.horizon)
+		print 'Solution:'
+		for k,s in enumerate(pol):
+			print '%2d:'%k,' '.join([str(a) for a in s])
+	if args.discount is not None and args.bound is not None:
+		pol = mdp.infinite_horizon_value_iteration(discount=args.discount,bound=args.bound)
+		Mdp.print_infinite_horizon_pol(pol)
 
-	print 'Solution:'
-	for k,s in enumerate(sol):
-		print '%2d:'%k,' '.join([str(a) for a in s])
 
 
 
