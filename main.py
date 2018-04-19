@@ -30,12 +30,15 @@ class Mdp:
 		return ' '.join(['%*.*f'%(dec_cases+2,dec_cases,i) for i in arr])
 
 	@staticmethod
-	def print_infinite_horizon_pol(pol):
-		print 'Solution:'
-		dec_idx = 1+int(math.log10(len(pol)-1))
-		dec_val = 1+int(math.log10(max(pol)))
-		for k,s in enumerate(pol):
-			print 'S%0*d: %*d' % (dec_idx,k,dec_val,s)
+	def print_infinite_horizon_array(arr, title):
+		print title
+		dec_idx = 1+int(math.log10(len(arr)-1))
+		dec_val = 1+int(math.log10(max(arr)))
+		for k,s in enumerate(arr):
+			if type(s) is int:
+				print 'S%0*d: %*d' % (dec_idx,k,dec_val,s)
+			if type(s) is float:
+				print 'S%0*d: %*f' % (dec_idx,k,dec_val,s)
 
 
 	def __init__(self, filename):
@@ -134,23 +137,24 @@ class Mdp:
 			aux = [[self.getR(s=s,a=a)+sum([self.getT(s=s,a=a,sn=sn)*self.V[sn] for sn in range(self.n)]) for a in range(self.m)] for s in range(self.n)]
 			self.V = [max(s) for s in aux]
 			print '%2d:'%k,Mdp.print_array(self.V)
-			self.pol.append([np.argmax(s) for s in aux])
+			self.pol.append([int(np.argmax(s)) for s in aux])
 		print ''
 		return  self.pol
 
 	def infinite_horizon_value_iteration(self, discount, bound):
-		stopping_threshold = bound*(1-discount)/discount
+		stopping_threshold = bound*(1-discount)**2/(2*discount**2)
 		self.V = self.n*[0.0]
+		print 'Iterative Value Function:'
 		while True:
 			oldV = self.V
 			aux = [[self.getR(s=s,a=a)+discount*sum([self.getT(s=s,a=a,sn=sn)*self.V[sn] for sn in range(self.n)]) for a in range(self.m)] for s in range(self.n)]
 			self.V = [max(s) for s in aux]
 			print Mdp.print_array(self.V)
-			self.pol = [np.argmax(s) for s in aux]
+			self.pol = [int(np.argmax(s)) for s in aux]
 			if Mdp.max_norm_dist(self.V,oldV) < stopping_threshold:
 				break
 		print ''
-		return self.pol
+		return self.pol, self.V
 
 
 
@@ -186,7 +190,7 @@ def main():
 			'-b','--bound',
 			nargs='?',
 			type=float,
-			default=None,
+			default=0.001,
 			help='The bound from the optimal.'
 		)
 
@@ -206,9 +210,10 @@ def main():
 		print 'Solution:'
 		for k,s in enumerate(pol):
 			print '%2d:'%k,' '.join([str(a) for a in s])
-	if args.discount is not None and args.bound is not None:
-		pol = mdp.infinite_horizon_value_iteration(discount=args.discount,bound=args.bound)
-		Mdp.print_infinite_horizon_pol(pol)
+	if args.discount is not None:
+		pol,val = mdp.infinite_horizon_value_iteration(discount=args.discount,bound=args.bound)
+		Mdp.print_infinite_horizon_array(pol,'\nSolution:')
+		Mdp.print_infinite_horizon_array(val,'\nValue Function:')
 
 
 
