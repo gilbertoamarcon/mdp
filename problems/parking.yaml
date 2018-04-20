@@ -1,0 +1,10 @@
+n: 3
+rewards: {
+  not_parked: -1,
+  collision: -10000,
+  handicap: -100,
+  distance_cost: -1,
+}
+transitions: {
+  handicap: 0.05,
+}

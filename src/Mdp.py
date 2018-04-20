@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 import numpy as np
-import argparse as ap
 import math
 
-prob_tolerance = 0.1
+prob_tolerance = 0.01
 dec_cases = int(math.log10(prob_tolerance**-1))
 
 
@@ -33,7 +32,7 @@ class Mdp:
 	def print_infinite_horizon_array(arr, title):
 		print title
 		dec_idx = 1+int(math.log10(len(arr)-1))
-		dec_val = 1+int(math.log10(max(arr)))
+		dec_val = 1+int(math.log10(max([abs(a) for a in arr])))
 		for k,s in enumerate(arr):
 			if type(s) is int:
 				print 'S%0*d: %*d' % (dec_idx,k,dec_val,s)
@@ -41,62 +40,65 @@ class Mdp:
 				print 'S%0*d: %*f' % (dec_idx,k,dec_val,s)
 
 
-	def __init__(self, filename):
-		self.T = []
-		self.R = []
-		self.m = 0
-		self.n = 0
-		with open(filename, 'r') as f:
-			for row_number,l in enumerate(f.readlines()):
-				row = l.decode("utf-8-sig").encode("utf-8").split()
+	def __init__(self,
+			filename=None,
+			T = [],
+			R = [],
+			m = 0,
+			n = 0,
+		):
+		self.T = T
+		self.R = R
+		self.m = m
+		self.n = n
+		if filename is not None:
+			with open(filename, 'r') as f:
+				for row_number,l in enumerate(f.readlines()):
+					row = l.decode("utf-8-sig").encode("utf-8").split()
 
-				# First Row: Header
-				if not row_number:
-					self.n = int(row[0])
-					self.m = int(row[1])
+					# First Row: Header
+					if not row_number:
+						self.n = int(row[0])
+						self.m = int(row[1])
 
-				# Body
-				else:
-					
-					# Empty Rows: Table Transition
-					if len(row) == 0:
-
-						# New Table 'T'
-						if len(self.T) < self.m:
-							self.T.append([])
-
-						# Tables 'T' and 'R' finished reading;
-						elif len(self.R) == self.n:
-							break
-
-					# Reading Table 'T' entry
-					elif len(row) == self.n and len(self.T[-1]) < self.n:
-						self.T[-1].append([float(e) for e in row])
-
-					# Reading Table 'R' entry
-					elif len(row) == self.m:
-						self.R.append([float(e) for e in row])
-
-					# File format issue
+					# Body
 					else:
-						Mdp.print_format_error()
+						
+						# Empty Rows: Table Transition
+						if len(row) == 0:
+
+							# New Table 'T'
+							if len(self.T) < self.m:
+								self.T.append([])
+
+							# Tables 'T' and 'R' finished reading;
+							elif len(self.R) == self.n:
+								break
+
+						# Reading Table 'T' entry
+						elif len(row) == self.n and len(self.T[-1]) < self.n:
+							self.T[-1].append([float(e) for e in row])
+
+						# Reading Table 'R' entry
+						elif len(row) == self.m:
+							self.R.append([float(e) for e in row])
+
+						# File format issue
+						else:
+							Mdp.print_format_error()
 
 	def __exit__(self):
 		pass
 
 	def __str__(self):
-		buff = ''
-		buff += 'Number of States (n): %s\n' % self.n
-		buff += 'Number of Actions (m): %s\n' % self.m
+		buff = '%s %s\n' % (self.n,self.m)
 		buff += '\n'
 
 		for a,x in enumerate(self.T):
-			buff += 'Action %s:\n' % a
 			for e in x:
 				buff += Mdp.print_array(e) + '\n'
 			buff += '\n'
 
-		buff += 'Rewards:\n'
 		for x in self.R:
 			buff += ' '.join(['%f'%i for i in x]) + '\n'
 		return buff
@@ -156,105 +158,9 @@ class Mdp:
 		print ''
 		return self.pol, self.V
 
-
-
-
-
-
-# Main
-def main():
-
-	# Parsing user input
-	parser = ap.ArgumentParser()
-	parser.add_argument(
-			'-i','--input',
-			nargs='?',
-			required=True,
-			help='Input file name.'
-		)
-	parser.add_argument(
-			'-t','--horizon',
-			nargs='?',
-			type=int,
-			default=None,
-			help='Time horizon.'
-		)
-	parser.add_argument(
-			'-d','--discount',
-			nargs='?',
-			type=float,
-			default=None,
-			help='The discount value.'
-		)
-	parser.add_argument(
-			'-b','--bound',
-			nargs='?',
-			type=float,
-			default=0.001,
-			help='The bound from the optimal.'
-		)
-
-	args = parser.parse_args()
-
-	mdp = Mdp(args.input)
-
-	error_code = mdp.validate_model()
-	if error_code:
-		Mdp.print_format_error(error_code=error_code)
-
-	print mdp
-
-	pol = {}
-	if args.horizon is not None:
-		pol = mdp.finite_horizon_value_iteration(horizon=args.horizon)
-		print 'Solution:'
-		for k,s in enumerate(pol):
-			print '%2d:'%k,' '.join([str(a) for a in s])
-	if args.discount is not None:
-		pol,val = mdp.infinite_horizon_value_iteration(discount=args.discount,bound=args.bound)
-		Mdp.print_infinite_horizon_array(pol,'\nSolution:')
-		Mdp.print_infinite_horizon_array(val,'\nValue Function:')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	def store_infinite_horizon_policy(self,filename):
+		buff = 'policy,value\n'
+		for p,v in zip(self.pol,self.V):
+			buff += '%d,%f\n' % (p,v)
+		with open(filename,'w') as f:
+			f.write(buff)
