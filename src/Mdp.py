@@ -42,6 +42,7 @@ class Mdp:
 
 	def __init__(self,
 			filename=None,
+			verbose=False,
 			T = [],
 			R = [],
 			m = 0,
@@ -51,6 +52,7 @@ class Mdp:
 		self.R = R
 		self.m = m
 		self.n = n
+		self.verbose = verbose
 		if filename is not None:
 			with open(filename, 'r') as f:
 				for row_number,l in enumerate(f.readlines()):
@@ -132,30 +134,36 @@ class Mdp:
 		return self.R[s][a]
 
 	def finite_horizon_value_iteration(self, horizon):
-		print 'Non-Stationary Value Function:'
+		if self.verbose:
+			print 'Non-Stationary Value Function:'
 		self.V = self.n*[0.0]
 		self.pol = []
 		for k in range(horizon):
 			aux = [[self.getR(s=s,a=a)+sum([self.getT(s=s,a=a,sn=sn)*self.V[sn] for sn in range(self.n)]) for a in range(self.m)] for s in range(self.n)]
 			self.V = [max(s) for s in aux]
-			print '%2d:'%k,Mdp.print_array(self.V)
+			if self.verbose:
+				print '%2d:'%k,Mdp.print_array(self.V)
 			self.pol.append([int(np.argmax(s)) for s in aux])
-		print ''
+		if self.verbose:
+			print ''
 		return  self.pol
 
 	def infinite_horizon_value_iteration(self, discount, bound):
 		stopping_threshold = bound*(1-discount)**2/(2*discount**2)
 		self.V = self.n*[0.0]
-		print 'Iterative Value Function:'
+		if self.verbose:
+			print 'Iterative Value Function:'
 		while True:
 			oldV = self.V
 			aux = [[self.getR(s=s,a=a)+discount*sum([self.getT(s=s,a=a,sn=sn)*self.V[sn] for sn in range(self.n)]) for a in range(self.m)] for s in range(self.n)]
 			self.V = [max(s) for s in aux]
-			print Mdp.print_array(self.V)
+			if self.verbose:
+				print Mdp.print_array(self.V)
 			self.pol = [int(np.argmax(s)) for s in aux]
 			if Mdp.max_norm_dist(self.V,oldV) < stopping_threshold:
 				break
-		print ''
+		if self.verbose:
+			print ''
 		return self.pol, self.V
 
 	def store_infinite_horizon_policy(self,filename):

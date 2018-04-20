@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from tabulate import tabulate
 from collections import OrderedDict
 import math
 
@@ -101,10 +102,13 @@ class Parking:
 	def analyse(self):
 		if self.solution is not None:
 			for s in self.solution:
-				print s
-				print ','.join([('\'' if not o else '')+'o and '+('\'' if not p else '')+'p' for o in [False,True] for p in [False,True]])
+				table = []
+				table.append(['\multicolumn{2}{c}{Spot}','','\multicolumn{2}{c}{Not Parked}','','\multicolumn{2}{c}{Parked}',''])
+				table.append(['Row','Number','Free','Occupied','Free','Occupied'])
 				for row in ['A','B']:
 					for row_idx in range(self.n):
-						number_format = '%d' if s == 'policy' else '%f'
-						print '%s%d, '%(row,row_idx)+','.join([number_format%self.solution[s][self.states[(row,row_idx,o,p)]] for o in [False,True] for p in [False,True]])
+						number_format = '%d' if s == 'policy' else '%.3f'
+						row_label = '\\multirow{%d}{*}{%s}'%(self.n,row) if not row_idx else ''
+						table.append([row_label,str(row_idx)]+['%.3f'%self.solution[s][self.states[(row,row_idx,o,p)]] if s == 'value' else self.actions.keys()[self.solution[s][self.states[(row,row_idx,o,p)]]] for p in [False,True] for o in [False,True]])
+				print tabulate(table, headers='firstrow', tablefmt='latex_raw')
 

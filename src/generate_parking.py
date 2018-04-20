@@ -22,15 +22,19 @@ def main():
 			required=True,
 			help='Output MDP file name.'
 		)
-
+	parser.add_argument(
+			'-v','--verbose',
+			action='count',
+			help='Verbose mode.'
+		)
 	args = parser.parse_args()
 
 	with open(args.input,'r') as f:
 		problem = yaml.load(f.read())
 
 	pking = Parking(problem)
-
-	print pking
+	if args.verbose:
+		print pking
 
 	mdp = Mdp(
 		T=pking.get_transitions(),

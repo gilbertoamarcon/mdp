@@ -34,7 +34,7 @@ def main():
 
 	pking = Parking(problem,solution)
 
-	print pking.analyse()
+	pking.analyse()
 
 
 if __name__ == "__main__":

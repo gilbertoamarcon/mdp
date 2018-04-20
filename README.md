@@ -1,16 +1,16 @@
 # Mdp
 
-Synthesize parking MDP problem using parameters in the ```problems/parking.yaml``` file into  ```problems/parking.txt```:
+Synthesize parking MDP problem using parameters in the ```problems/parking-a.yaml``` file into  ```problems/parking-a.txt```:
 ```
-python src/generate_parking.py -i problems/parking.yaml -o problems/parking.txt
-```
-
-Solve the parking MDP problem ```problems/parking.txt``` with discount rate ```0.9```, and store policy to CSV file ```sols/parking_policy.csv```:
-```
-python src/solve.py -i problems/parking.txt -d 0.9 -o sols/parking_policy.csv
+python src/generate_parking.py -i problems/parking-a.yaml -o problems/parking-a.txt
 ```
 
-Analyse the results of the policy CSV file ```sols/parking_policy.csv```:
+Solve the parking MDP problem ```problems/parking-a.txt``` with discount rate ```0.9```, and store policy to CSV file ```sols/parking-a.csv```:
 ```
-python src/analyse_parking.py -i problems/parking.yaml -s sols/parking_policy.csv
+python src/solve.py -i problems/parking-a.txt -d 0.9 -o sols/parking-a.csv
+```
+
+Analyse the results of the policy CSV file ```sols/parking-a.csv```:
+```
+python src/analyse_parking.py -i problems/parking-a.yaml -s sols/parking-a.csv
 ```
