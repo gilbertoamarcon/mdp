@@ -5,7 +5,7 @@ Synthesize parking MDP problem using parameters in the ```problems/parking.yaml`
 python src/generate_parking.py -i problems/parking.yaml -o problems/parking.txt
 ```
 
-Solve the parking MDP problem ```problems/parking.txt``` with discount rate ```0.9```, and storing policy to CSV file ```sols/parking_policy.csv```:
+Solve the parking MDP problem ```problems/parking.txt``` with discount rate ```0.9```, and store policy to CSV file ```sols/parking_policy.csv```:
 ```
 python src/solve.py -i problems/parking.txt -d 0.9 -o sols/parking_policy.csv
 ```

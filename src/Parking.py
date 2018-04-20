@@ -20,16 +20,6 @@ class Parking:
 			'\nStates:',
 			'\n'.join('%*d %s'% (1+int(math.log10(len(self.states.items())-1)),v,'Row: %s Spot: %d Ocupied: %d Parked: %d'%k) for k,v in self.states.items()),
 		])
-	
-	def analyse(self):
-		if self.solution is not None:
-			for s in self.solution:
-				print s
-				print ','.join([('\'' if not o else '')+'o and '+('\'' if not p else '')+'p' for o in [False,True] for p in [False,True]])
-				for row in ['A','B']:
-					for row_idx in range(self.n):
-						number_format = '%d' if s == 'policy' else '%f'
-						print '%s%d, '%(row,row_idx)+','.join([number_format%self.solution[s][self.states[(row,row_idx,o,p)]] for o in [False,True] for p in [False,True]])
 
 
 	def drive(self, row, row_idx):
@@ -107,4 +97,14 @@ class Parking:
 
 	def get_num_actions(self):
 		return len(self.actions)
+	
+	def analyse(self):
+		if self.solution is not None:
+			for s in self.solution:
+				print s
+				print ','.join([('\'' if not o else '')+'o and '+('\'' if not p else '')+'p' for o in [False,True] for p in [False,True]])
+				for row in ['A','B']:
+					for row_idx in range(self.n):
+						number_format = '%d' if s == 'policy' else '%f'
+						print '%s%d, '%(row,row_idx)+','.join([number_format%self.solution[s][self.states[(row,row_idx,o,p)]] for o in [False,True] for p in [False,True]])
 

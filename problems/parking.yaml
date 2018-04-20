@@ -1,4 +1,4 @@
-n: 3
+n: 10
 rewards: {
   not_parked: -1,
   collision: -10000,
