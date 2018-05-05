@@ -41,6 +41,19 @@ class Mdp:
 
 
 	def __init__(self,
+			verbose=False,
+			T = [],
+			R = [],
+			m = 0,
+			n = 0,
+		):
+		self.T = T
+		self.R = R
+		self.m = m
+		self.n = n
+		self.verbose = verbose
+
+	def __init__(self,
 			filename=None,
 			verbose=False,
 			T = [],
@@ -104,6 +117,24 @@ class Mdp:
 		for x in self.R:
 			buff += ' '.join(['%f'%i for i in x]) + '\n'
 		return buff
+
+	def init_sim(self, discount, initial):
+		self.discount	= discount
+		self.state		= initial
+		self.net_reward	= 0.0
+		self.t			= 0
+
+	def act(self, action):
+		r = self.R[self.state][action]
+		self.net_reward += r*self.discount**self.t
+		self.t += 1
+		prev_state = self.state
+		cdf = np.cumsum([sn for sn in self.T[action][self.state]])
+		self.state = np.searchsorted(cdf,np.random.rand())
+		return r,self.state
+
+	def get_net_reward(self):
+		return self.net_reward
 
 	def validate_model(self):
 		if len(self.T) != self.m:

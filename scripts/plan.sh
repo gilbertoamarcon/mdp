@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# ./scripts/run.sh parking-a
+
 prob=$1
 
 python src/generate_parking.py -i problems/$prob.yaml -o problems/$prob.txt
